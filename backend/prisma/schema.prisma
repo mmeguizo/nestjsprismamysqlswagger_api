@@ -1,0 +1,91 @@
+// Prisma Schema for University Institutional Dashboard Monitoring System
+// This is your Prisma schema file - the single source of truth for your database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MODEL
+// ============================================
+
+model User {
+  id        Int      @id @default(autoincrement())
+  
+  // Core fields
+  email     String   @unique @db.VarChar(255)
+  username  String   @unique @db.VarChar(100)
+  firstName String   @map("first_name") @db.VarChar(100)
+  lastName  String   @map("last_name") @db.VarChar(100)
+  password  String   @db.VarChar(255)
+  
+  // Organization fields
+  campus    Campus   @default(TALISAY)
+  department String? @db.VarChar(100)
+  departmentId String? @map("department_id") @db.VarChar(50)
+  
+  // Role & Status
+  role      UserRole @default(OFFICE_HEAD)
+  status    UserStatus @default(PENDING)
+  
+  // Hierarchy references
+  vicePresidentId   String? @map("vice_president_id") @db.VarChar(50)
+  vicePresidentName String? @map("vice_president_name") @db.VarChar(200)
+  directorId        String? @map("director_id") @db.VarChar(50)
+  directorName      String? @map("director_name") @db.VarChar(200)
+  officeHeadId      String? @map("office_head_id") @db.VarChar(50)
+  officeHeadName    String? @map("office_head_name") @db.VarChar(200)
+  
+  // Profile
+  profilePic String @default("no-photo.png") @map("profile_pic") @db.VarChar(500)
+  
+  // Soft delete & Timestamps
+  deleted     Boolean   @default(false)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  lastLoginAt DateTime? @map("last_login_at")
+  
+  // Performance indexes
+  @@index([email])
+  @@index([username])
+  @@index([deleted, role])
+  @@index([deleted, status])
+  @@index([directorId, deleted])
+  @@index([vicePresidentId, deleted])
+  @@index([departmentId, deleted])
+  @@index([createdAt(sort: Desc)])
+  
+  @@map("users")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  ADMIN
+  PRESIDENT
+  VICE_PRESIDENT
+  DIRECTOR
+  OFFICE_HEAD
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  SUSPENDED
+  DELETED
+}
+
+enum Campus {
+  TALISAY        // Main Campus
+  BINALBAGAN
+  FORTUNE_TOWN
+  ALIJIS
+}
